@@ -5,7 +5,15 @@ and high-performance statistical analytics endpoints.
 """
 
 import os
+import sys
 import io
+
+# Ensure backend and root directories are in sys.path for local, Vercel, and containerized runtimes
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+for p in [CURRENT_DIR, PROJECT_ROOT]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
