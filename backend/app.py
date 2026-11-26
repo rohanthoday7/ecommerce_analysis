@@ -85,18 +85,28 @@ class StateManager:
 state = StateManager()
 
 # Initialize with synthetic dataset (single source of truth) on startup
-SYNTHETIC_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "synthetic_ecommerce_orders_2025.csv")
-LEGACY_SAMPLE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sample_ecommerce.csv")
-DEFAULT_SAMPLE_PATH = SYNTHETIC_PATH if os.path.exists(SYNTHETIC_PATH) else LEGACY_SAMPLE_PATH
-DEFAULT_DATASET_NAME = "synthetic_ecommerce_orders_2025.csv" if os.path.exists(SYNTHETIC_PATH) else "sample_ecommerce.csv"
+def find_data_file():
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "..", "data", "synthetic_ecommerce_orders_2025.csv"),
+        os.path.join(os.getcwd(), "data", "synthetic_ecommerce_orders_2025.csv"),
+        os.path.join(os.path.dirname(__file__), "data", "synthetic_ecommerce_orders_2025.csv"),
+        os.path.join(os.path.dirname(__file__), "..", "data", "sample_ecommerce.csv"),
+        os.path.join(os.getcwd(), "data", "sample_ecommerce.csv"),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return os.path.abspath(p), os.path.basename(p)
+    return None, "synthetic_ecommerce_orders_2025.csv"
 
-if os.path.exists(DEFAULT_SAMPLE_PATH):
+DEFAULT_SAMPLE_PATH, DEFAULT_DATASET_NAME = find_data_file()
+
+if DEFAULT_SAMPLE_PATH and os.path.exists(DEFAULT_SAMPLE_PATH):
     try:
         init_df = pd.read_csv(DEFAULT_SAMPLE_PATH)
         state.load_from_df(init_df, DEFAULT_DATASET_NAME)
         print(f"Initialized application with source dataset '{DEFAULT_DATASET_NAME}': {len(init_df)} records.")
     except Exception as e:
-        print(f"Warning: Failed to load default sample dataset: {e}")
+        print(f"Warning: Failed to load default dataset: {e}")
 
 # -------------------------------------------------------------
 # Dataset Management Endpoints
@@ -436,7 +446,12 @@ def get_insights(
 # -------------------------------------------------------------
 # Static Frontend Serving
 # -------------------------------------------------------------
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
+candidate_frontend_dirs = [
+    os.path.join(os.path.dirname(__file__), "..", "frontend"),
+    os.path.join(os.getcwd(), "frontend"),
+    os.path.join(os.path.dirname(__file__), "frontend"),
+]
+FRONTEND_DIR = next((d for d in candidate_frontend_dirs if os.path.exists(d)), candidate_frontend_dirs[0])
 if os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 

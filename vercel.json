@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "backend/app.py": {
+      "includeFiles": "data/**,frontend/**"
+    },
+    "api/index.py": {
+      "includeFiles": "data/**,frontend/**"
+    }
+  }
+}
